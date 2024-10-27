@@ -6,5 +6,8 @@ Provides object previews for JSON files
 
 Provides object previews for JSON files
 
+## CHANGE_LOG
+10272024 - Previews will only show if an object is collapsed
+
 
 

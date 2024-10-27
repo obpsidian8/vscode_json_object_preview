@@ -2,7 +2,8 @@
   "name": "json-object-preview",
   "displayName": "json-object-preview",
   "description": "previews folded json objects like intellij",
-  "version": "0.0.1",
+  "version": "0.0.3",
+  "publisher": "SeunOlarinre",
   "engines": {
     "vscode": "^1.94.0"
   },

@@ -76,11 +76,15 @@ function updateDecorations(editor: vscode.TextEditor, decorationType: vscode.Tex
                 console.log(`log..preview: ${preview}`);
                           
                 const lineToCheck = i;
-                const collapsed = isLineCollapsed(editor, lineToCheck);
-                console.log(`Collapsed State: ${lineToCheck+1} is ${collapsed ? 'collapsed' : 'not collapsed'}`);
+                const folded = isLineFolded(editor, lineToCheck+1);
+                console.log(`folded State AT ${lineToCheck+1} is ${folded ? 'folded' : 'not folded'}`);
 
-                const decoration = { range: new vscode.Range(i, line.range.end.character, i, line.range.end.character), renderOptions: { after: { contentText: preview } } };
-                decorations.push(decoration);
+                if (folded)
+                    {const decoration = { range: new vscode.Range(i, line.range.end.character, i, line.range.end.character), renderOptions: { after: { contentText: preview } } };
+                    decorations.push(decoration);
+                }
+                // const decoration = { range: new vscode.Range(i, line.range.end.character, i, line.range.end.character), renderOptions: { after: { contentText: preview } } };
+                // decorations.push(decoration);
             }
         }
     });
@@ -88,13 +92,13 @@ function updateDecorations(editor: vscode.TextEditor, decorationType: vscode.Tex
     editor.setDecorations(decorationType, decorations);
 }
 
-function isLineCollapsed(editor: vscode.TextEditor, line: number): boolean {
-    const document = editor.document;
-    const text = document.lineAt(line).text.trim();
-    
-    console.log(`LOG..Text at line: ${line}:${text} `);
-
-    return false;
+function isLineFolded(editor: vscode.TextEditor, line: number): boolean {
+    for (const range of editor.visibleRanges) {
+        if (line >= range.start.line && line <= range.end.line) {
+            return false;
+        }
+    }
+    return true;
 }
 
 function getFirstKeyValuePreview(document: vscode.TextDocument, startLine: number): string {
