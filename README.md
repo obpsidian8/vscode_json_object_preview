@@ -10,6 +10,6 @@ Provides object previews for JSON files
 10272024 - Previews will only show if an object is collapsed
 
 ## Demo
-![Getting Started](./images/json_object_preview_demo.gif)
+![Getting Started](https://raw.githubusercontent.com/obpsidian8/vscode_json_object_preview/main/images/json_object_preview_demo.gif)
 
 
