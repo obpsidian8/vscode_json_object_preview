@@ -3,6 +3,11 @@
   "displayName": "json-object-preview",
   "description": "previews folded json objects like intellij",
   "version": "0.0.3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/obpsidian8/vscode_json_object_preview"
+  },
+  "icon": "images/icon.png",
   "publisher": "SeunOlarinre",
   "engines": {
     "vscode": "^1.94.0"
@@ -10,14 +15,21 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": ["onLanguage:json"],
+  "keywords": [
+    "json",
+    "preview"
+  ],
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:jsonc"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "languages": [
       {
         "id": "json",
-        "aliases": ["JSON", "json"],
-        "extensions": [".json", ".jsonc"],
+        "aliases": [ "JSON", "json" ],
+        "extensions": [ ".json", ".jsonc" ],
         "configuration": "./language-configuration.json"
       }
     ],
