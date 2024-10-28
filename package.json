@@ -2,7 +2,7 @@
   "name": "json-object-preview",
   "displayName": "json-object-preview",
   "description": "previews folded json objects like intellij",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "repository": {
     "type": "git",
     "url": "https://github.com/obpsidian8/vscode_json_object_preview"
