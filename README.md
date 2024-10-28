@@ -10,6 +10,6 @@ Provides object previews for JSON files
 10272024 - Previews will only show if an object is collapsed
 
 ## Demo
-![Getting Started](https://ibb.co/k0jqLvz)
+![Getting Started](https://i.ibb.co/Y8mf5wJ/json-object-preview-demo.gif)
 
 
