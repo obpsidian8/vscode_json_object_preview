@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 
+let hiddenDecorationType: vscode.TextEditorDecorationType | undefined;
+let hiddenRanges: vscode.Range[] = [];
+let hiddenLines: number[] = [];
+
 export function activate(context: vscode.ExtensionContext) {
     vscode.languages.registerFoldingRangeProvider({ language: 'json' }, new JsonFoldingRangeProvider());
 
@@ -65,31 +69,83 @@ function updateDecorations(editor: vscode.TextEditor, decorationType: vscode.Tex
     const foldingRanges = editor.visibleRanges;
     foldingRanges.forEach(range => {
         for (let i = range.start.line; i <= range.end.line; i++) {
-            console.log(`\nlog..=========================`);
+            // console.log(`\nlog..=========================`);
             const line = document.lineAt(i);
             const text = line.text.trim();
-            console.log(`log..text @ ${i+1}: ${text}`);
+            // console.log(`log..text @ ${i+1}: ${text}`);
 
+            const lineToCheck = i;
             if (text.endsWith('{') || text.endsWith('[')) {
-                console.log(`log..getFirstKeyValuePreview for startline ${i+1}`);
+                // console.log(`log..getFirstKeyValuePreview for startline ${i+1}`);
                 const preview = getFirstKeyValuePreview(document, i);
-                console.log(`log..preview: ${preview}`);
-                          
-                const lineToCheck = i;
+                // console.log(`log..preview: ${preview}`);
+                
                 const folded = isLineFolded(editor, lineToCheck+1);
-                console.log(`folded State AT ${lineToCheck+1} is ${folded ? 'folded' : 'not folded'}`);
+                // console.log(`folded State AT ${lineToCheck+1} is ${folded ? 'folded' : 'not folded'}`);
 
                 if (folded)
                     {const decoration = { range: new vscode.Range(i, line.range.end.character, i, line.range.end.character), renderOptions: { after: { contentText: preview } } };
                     decorations.push(decoration);
                 }
-                // const decoration = { range: new vscode.Range(i, line.range.end.character, i, line.range.end.character), renderOptions: { after: { contentText: preview } } };
-                // decorations.push(decoration);
             }
+
+            // Begin section to hide or show lines
+            if (text === "}" || text === "}," || text === "]" || text === "],") {
+                // Hide the line above ONLY if the line right above is folded
+                const hidden = isLineFolded(editor, lineToCheck-1);
+                // console.log(`Hidden Line State: ${lineToCheck} is ${hidden ? 'hidden' : 'not hidden'}`);
+                if (hidden){
+                    hideTextInLine(editor, lineToCheck);
+                    hiddenLines.push(lineToCheck);
+                };
+            }
+            
+            // Check if the current line is in hiddenLines array
+            const isHidden = hiddenLines.includes(lineToCheck);
+            // If current line is there, we need to unhide it ONLY IF the line above is NOT folded
+            if (isHidden){
+                const lineAboveIsFolded = isLineFolded(editor, lineToCheck-1);
+                if (!lineAboveIsFolded){
+                    console.log(`Need to unhide this line(${lineToCheck+1})!`);
+                    showHiddenText(editor,lineToCheck);
+                }
+
+            }
+            // End of section to hide  and show lines
         }
     });
 
     editor.setDecorations(decorationType, decorations);
+}
+
+function showHiddenText(editor: vscode.TextEditor, line: number) {
+    if (!hiddenDecorationType) {
+        return;
+    }
+    // Filter out the range for the specified line
+    hiddenRanges = hiddenRanges.filter(range => range.start.line !== line);
+
+    // Update the decorations
+    editor.setDecorations(hiddenDecorationType, hiddenRanges);
+
+    // Dispose the decoration type if no ranges are left
+    if (hiddenRanges.length === 0) {
+        hiddenDecorationType.dispose();
+        hiddenDecorationType = undefined;
+    }
+}
+
+
+function hideTextInLine(editor: vscode.TextEditor, line: number) {
+    if (!hiddenDecorationType) {
+        hiddenDecorationType = vscode.window.createTextEditorDecorationType({
+            textDecoration: 'none; opacity: 0.15;', // Make text faded
+        });
+    }
+
+    const range = new vscode.Range(new vscode.Position(line, 0), new vscode.Position(line, editor.document.lineAt(line).text.length));
+    hiddenRanges.push(range);
+    editor.setDecorations(hiddenDecorationType, hiddenRanges);
 }
 
 function isLineFolded(editor: vscode.TextEditor, line: number): boolean {
@@ -137,16 +193,16 @@ function getFirstKeyValuePreview(document: vscode.TextDocument, startLine: numbe
 }
 
 function getFirstValuePreview(value: string,  document: vscode.TextDocument, lineNum:number): string {
-    console.log(`log..Value: ${value}`);
+    // console.log(`log..Value: ${value}`);
     try {
         const parsedValue = JSON.parse(value);
-        console.log(`log..parsedValue ${parsedValue}`);
+        // console.log(`log..parsedValue ${parsedValue}`);
         if (typeof parsedValue === 'object' && parsedValue !== null) {
             const firstKey = Object.keys(parsedValue)[0];
             return `${firstKey}: ${JSON.stringify(parsedValue[firstKey])}`;
         }
     } catch (e) {
-        console.log(`log..Error ${e}`);
+        // console.log(`log..Error ${e}`);
         // If parsing fails, return the value as is
     }
     if(value==='{' && !document.lineAt(lineNum+1).text.trim().includes('{') ){ // Also need to check the next two lines
