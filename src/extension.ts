@@ -139,7 +139,7 @@ function showHiddenText(editor: vscode.TextEditor, line: number) {
 function hideTextInLine(editor: vscode.TextEditor, line: number) {
     if (!hiddenDecorationType) {
         hiddenDecorationType = vscode.window.createTextEditorDecorationType({
-            textDecoration: 'none; opacity: 0.15;', // Make text faded
+            textDecoration: 'none; opacity: 0.15;', // Make text faded.
         });
     }
 
