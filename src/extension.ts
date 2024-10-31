@@ -76,13 +76,12 @@ function updateDecorations(editor: vscode.TextEditor, decorationType: vscode.Tex
 
             const lineToCheck = i;
             if (text.endsWith('{') || text.endsWith('[')) {
-                // console.log(`log..getFirstKeyValuePreview for startline ${i+1}`);
+                // console.log(`\nDEBUG..getFirstKeyValuePreview for startline ${i+1} with text ${text}`);
                 const preview = getFirstKeyValuePreview(document, i);
                 // console.log(`log..preview: ${preview}`);
                 
                 const folded = isLineFolded(editor, lineToCheck+1);
                 // console.log(`folded State AT ${lineToCheck+1} is ${folded ? 'folded' : 'not folded'}`);
-
                 if (folded)
                     {const decoration = { range: new vscode.Range(i, line.range.end.character, i, line.range.end.character), renderOptions: { after: { contentText: preview } } };
                     decorations.push(decoration);
@@ -106,7 +105,7 @@ function updateDecorations(editor: vscode.TextEditor, decorationType: vscode.Tex
             if (isHidden){
                 const lineAboveIsFolded = isLineFolded(editor, lineToCheck-1);
                 if (!lineAboveIsFolded){
-                    console.log(`Need to unhide this line(${lineToCheck+1})!`);
+                    // console.log(`Need to unhide this line(${lineToCheck+1})!`);
                     showHiddenText(editor,lineToCheck);
                 }
 
@@ -139,7 +138,7 @@ function showHiddenText(editor: vscode.TextEditor, line: number) {
 function hideTextInLine(editor: vscode.TextEditor, line: number) {
     if (!hiddenDecorationType) {
         hiddenDecorationType = vscode.window.createTextEditorDecorationType({
-            textDecoration: 'none; opacity: 0.15;', // Make text faded.
+            textDecoration: 'none; opacity: 0.18;', // Make text faded.
         });
     }
 
@@ -166,6 +165,7 @@ function getFirstKeyValuePreview(document: vscode.TextDocument, startLine: numbe
         const line = document.lineAt(i);
         const text = line.text.trim();
 
+        // console.log(`DEBUG: startLine: ${startLine+1}`)
         if (text.endsWith('{') || text.endsWith('[')) {
             depth++;
         } else if (text.endsWith('}') || text.endsWith(']')) {
@@ -174,26 +174,34 @@ function getFirstKeyValuePreview(document: vscode.TextDocument, startLine: numbe
 
         if (!firstKeyValueFound && text.includes(':')) {
             const keyValue = text.split(':').map(part => part.trim());
+            // console.log(`DEBUG:Line ${i+1} keyValue: ${keyValue}`);
             if (keyValue.length >= 2) {
                 preview = `${getFirstValuePreview(keyValue[1],document, i)}`;
-                console.log(`log..initial preview: ${preview}`);
-                if (!preview.includes('...]') && !preview.includes('...}')){
+                const calc_preview = preview;
+                // console.log(`log..initial preview: ${preview}`);
+                if ( (!preview.includes('...]') && !preview.includes('...}')) ){
                     preview = `${keyValue[0]}: ${preview}`;
                 }
+
                 firstKeyValueFound = true;
             }
         }
+        else if (!firstKeyValueFound && text === "{"){
+            preview = `${document.lineAt(i+1).text.trim()}...}`;
+            firstKeyValueFound = true;
+        }
+        
 
         if (depth === 0) {
             break;
         }
     }
-    console.log(`log...getFirstKeyValuePreview: ${preview}`);
-    return preview.length > 50 ? preview.substring(0, 47) + '...' : preview;
+    // console.log(`log...getFirstKeyValuePreview for line ${startLine+1}: ${preview}`);
+    return preview.length > 120 ? preview.substring(0, 80) + '...' : preview;
 }
 
 function getFirstValuePreview(value: string,  document: vscode.TextDocument, lineNum:number): string {
-    // console.log(`log..Value: ${value}`);
+    // console.log(`log..item to run getFirstValuePreview for: ${value}`);
     try {
         const parsedValue = JSON.parse(value);
         // console.log(`log..parsedValue ${parsedValue}`);
@@ -209,11 +217,22 @@ function getFirstValuePreview(value: string,  document: vscode.TextDocument, lin
         return `${document.lineAt(lineNum+1).text.trim()}...}`;
     }
 
-    if(value==='{'){ // Also need to check the next two lines
+    if(value==='{'){ 
         return `...}`;
     }
 
     if(value==='['){
+        if (document.lineAt(lineNum+1).text.trim().startsWith("\"")) {
+            // console.log(`DEBUG: line ${lineNum+2} starts with "". The full value is ${document.lineAt(lineNum+1).text.trim()}`);
+            let nextLineCount = 2;
+            let elementCount = 1;
+            while (document.lineAt(lineNum+nextLineCount).text.trim().startsWith("\"")){
+                elementCount =elementCount+1;
+                nextLineCount = nextLineCount+1;
+            };
+            return `${elementCount} elements...]`;
+        };
+
         return `...]`;
     }
 
